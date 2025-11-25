@@ -1,0 +1,21 @@
+
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Center {
+  id         Int      @id @default(autoincrement())
+  name       String   // NOT NULL par défaut
+  city       String   // NOT NULL par défaut
+  codePostal Int      // devient un nombre au lieu d'un String
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

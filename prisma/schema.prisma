@@ -12,10 +12,9 @@ datasource db {
 
 model Center {
   id         Int      @id @default(autoincrement())
-  name       String   // NOT NULL par défaut
-  city       String   // NOT NULL par défaut
-  codePostal Int      // devient un nombre au lieu d'un String
-
+  name       String
+  city       String
+  codePostal String    // <-- CHANGER Int → String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }

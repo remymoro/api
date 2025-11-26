@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, Logger, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/database/prisma.service';
-import { UpdateCenterDto } from '../dto/update-center.dto';
 import { CreateCenterDto } from '../dto/create-center.dto';
+import { UpdateCenterDto } from '../dto/update-center.dto';
+import { Errors } from 'src/common/errors/errors';
 
 @Injectable()
 export class CentersService {
@@ -9,37 +10,59 @@ export class CentersService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateCenterDto) {
+  // ----------------------------------------------------
+  // CREATE
+  // ----------------------------------------------------
+  async create(dto: CreateCenterDto) {
+    this.logger.log(`Creating center: ${dto.name}`);
 
-  // Vérification si le centre existe déjà
-  const exists = await this.prisma.center.findFirst({
-    where: {
-      name: data.name,
-    },
-  });
+    // 1️⃣ Doublon name → erreur métier
+    const nameExists = await this.prisma.center.findFirst({
+      where: { name: dto.name },
+    });
 
-  if (exists) {
-    throw new BadRequestException(
-      `Un centre avec le nom "${data.name}" existe déjà`
-    );
+    if (nameExists) {
+      throw Errors.CenterAlreadyExists({
+        fieldErrors: {
+          name: `Le centre "${dto.name}" existe déjà.`,
+        },
+      });
+    }
+
+    // 2️⃣ Doublon email (si email fourni)
+    if (dto.email) {
+      const emailExists = await this.prisma.center.findFirst({
+        where: { email: dto.email },
+      });
+
+      if (emailExists) {
+        throw Errors.CenterInvalidEmail({
+          fieldErrors: {
+            email: `L'adresse e-mail "${dto.email}" est déjà utilisée.`,
+          },
+        });
+      }
+    }
+
+    // 3️⃣ Laisse Prisma gérer les contraintes techniques
+    return this.prisma.center.create({
+      data: dto,
+    });
   }
 
-  const created = await this.prisma.center.create({
-    data,
-  });
-
-
-  return created;
-}
-
+  // ----------------------------------------------------
+  // FIND ALL
+  // ----------------------------------------------------
   async findAll() {
     this.logger.log('Fetching all centers');
-
     return this.prisma.center.findMany({
       orderBy: { id: 'asc' },
     });
   }
 
+  // ----------------------------------------------------
+  // FIND ONE
+  // ----------------------------------------------------
   async findOne(id: number) {
     this.logger.log(`Fetching center #${id}`);
 
@@ -48,40 +71,76 @@ export class CentersService {
     });
 
     if (!center) {
-      this.logger.warn(`Center #${id} not found`);
-      throw new NotFoundException(`Center #${id} not found`);
+      throw Errors.CenterNotFound();
     }
 
-    this.logger.log(`Center #${id} found`);
     return center;
   }
 
-  async update(id: number, data: UpdateCenterDto) {
-    this.logger.log(`Updating center #${id} with data: ${JSON.stringify(data)}`);
+  // ----------------------------------------------------
+  // UPDATE
+  // ----------------------------------------------------
+  async update(id: number, dto: UpdateCenterDto) {
+    this.logger.log(`Updating center #${id}`);
 
-    const center = await this.findOne(id); // Already logs if not found
+    // 1️⃣ Vérifier existence
+    await this.findOne(id);
 
-    const updated = await this.prisma.center.update({
+
+     if (dto.name) {
+      const nameUsedByOther = await this.prisma.center.findFirst({
+        where: {
+          name: dto.name,
+          id: { not: id },
+        },
+      });
+
+      if (nameUsedByOther) {
+        throw Errors.CenterAlreadyExists({
+          fieldErrors: {
+            name: `Le centre "${dto.name}" existe déjà.`,
+          },
+        });
+      }
+    }
+
+    // 2️⃣ Vérification doublon email (si email modifié)
+    if (dto.email) {
+      const emailUsedByOther = await this.prisma.center.findFirst({
+        where: {
+          email: dto.email,
+          id: { not: id },
+        },
+      });
+
+      if (emailUsedByOther) {
+        throw Errors.CenterInvalidEmail({
+          fieldErrors: {
+            email: `L'adresse e-mail "${dto.email}" est déjà utilisée.`,
+          },
+        });
+      }
+    }
+
+    // 3️⃣ Prisma P2025/FK error → handled by error.factory
+    return this.prisma.center.update({
       where: { id },
-      data,
+      data: dto,
     });
-
-    this.logger.log(`Center #${id} updated successfully`);
-
-    return updated;
   }
 
+  // ----------------------------------------------------
+  // DELETE
+  // ----------------------------------------------------
   async remove(id: number) {
-    this.logger.log(`Removing center #${id}`);
+    this.logger.log(`Deleting center #${id}`);
 
-    const center = await this.findOne(id); 
+    // 1️⃣ Vérifier existence
+    await this.findOne(id);
 
-    const deleted = await this.prisma.center.delete({
+    // 2️⃣ Prisma P2025 sera interceptée par error.factory
+    return this.prisma.center.delete({
       where: { id },
     });
-
-    this.logger.log(`Center #${id} deleted successfully`);
-
-    return deleted;
   }
 }

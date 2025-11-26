@@ -1,4 +1,5 @@
-import { IsString, IsNotEmpty, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, MinLength, MaxLength, Matches, IsOptional, IsEmail } from 'class-validator';
+
 
 
 export class CreateCenterDto {
@@ -18,4 +19,20 @@ export class CreateCenterDto {
     message: 'Le code postal doit contenir 5 chiffres',
   })
   codePostal: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(5)
+  address: string;
+
+  @IsString()
+  @IsOptional()
+  @Matches(/^[0-9+().\-\s]{8,20}$/, {
+    message: 'Le numéro de téléphone est invalide',
+  })
+  phone?: string;
+
+  @IsEmail({}, { message: 'Adresse e-mail invalide' })
+  @IsOptional()
+  email?: string;
 }

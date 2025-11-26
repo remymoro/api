@@ -2,8 +2,11 @@ import 'dotenv/config';
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common/pipes/validation.pipe';
 
+import { ValidationPipe, BadRequestException } from '@nestjs/common';
+import { ValidationError } from 'class-validator';
+
+import { AppErrorFilter } from './common/filters/app-error.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -13,14 +16,19 @@ async function bootstrap() {
     },
   });
 
+  // 1️⃣ Installe le filtre global d’erreurs
+  app.useGlobalFilters(new AppErrorFilter());
 
+  // 2️⃣ Installe le ValidationPipe – SYNTAXE CORRECTE
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true, // supprime les champs non attendus dans les DTO
-      forbidNonWhitelisted: false, // si true → erreur si extra champs
-      transform: true, // convertit les types (string => number)
-      transformOptions: {
-        enableImplicitConversion: true, // permet de convertir automatiquement
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+
+      // Exception factory = renvoie la liste complète des ValidationError[]
+      exceptionFactory: (errors: ValidationError[]) => {
+        return new BadRequestException(errors);
       },
     }),
   );

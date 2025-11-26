@@ -14,7 +14,11 @@ model Center {
   id         Int      @id @default(autoincrement())
   name       String
   city       String
-  codePostal String    // <-- CHANGER Int → String
+  codePostal String
+  address    String
+  phone      String?
+  email      String?
+
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }

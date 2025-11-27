@@ -25,6 +25,17 @@ export enum AppErrorCode {
   CENTER_INVALID_POSTAL_CODE = 'CENTER_INVALID_POSTAL_CODE',
 
   // -----------------------------------------------------
+  // 🟣 STORE MODULE
+  // -----------------------------------------------------
+  STORE_ALREADY_EXISTS = 'STORE_ALREADY_EXISTS',
+  STORE_NOT_FOUND = 'STORE_NOT_FOUND',
+  STORE_INVALID_EMAIL = 'STORE_INVALID_EMAIL',
+  STORE_INVALID_PHONE = 'STORE_INVALID_PHONE',
+  STORE_INVALID_ADDRESS = 'STORE_INVALID_ADDRESS',
+  STORE_INVALID_POSTAL_CODE = 'STORE_INVALID_POSTAL_CODE',
+  STORE_VALIDATION_FAILED = 'STORE_VALIDATION_FAILED',
+
+  // -----------------------------------------------------
   // 🔶 VALIDATION GENERIQUE
   // -----------------------------------------------------
   VALIDATION_FAILED = 'VALIDATION_FAILED',

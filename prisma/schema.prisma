@@ -19,6 +19,28 @@ model Center {
   phone      String?
   email      String?
 
+  stores     Store[]
+
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model Store {
+  id         Int      @id @default(autoincrement())
+  name       String
+  address    String
+  city       String
+  codePostal String
+  phone      String?
+  email      String?
+  img        String?
+
+  centerId   Int
+  center     Center   @relation(fields: [centerId], references: [id], onDelete: Restrict)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // 🔥 Unicité réelle d’un magasin : adresse exacte
+  @@unique([address, city, codePostal])
 }

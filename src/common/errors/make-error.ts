@@ -18,24 +18,18 @@ import { AppErrorCode } from './app-error-code';
 // throw Errors.CenterAlreadyExists({ fieldErrors: ... })
 //
 // C’est plus propre, plus maintenable, plus pro.
-export function makeError<TDetails = any>(
-  code: AppErrorCode,     // le code unique de l’erreur (enum)
-  message: string,        // message humain par défaut
-  status: number,         // code HTTP
-) {
 
-  // Cette fonction retourne un constructeur D’ERREUR.
-  //
-  // On peut l'appeler plus tard avec des "details".
-  //
-  // Exemple :
-  // const err = CenterAlreadyExists({ fieldErrors: { name: "..." }})
-  // -> err est un AppError
-  return (details?: TDetails) =>
-    new AppError<TDetails>({
-      code,
-      message,
-      status,
-      details,
-    });
+export function makeError<TDetails = any>(
+  code: string,
+  message: string,
+  status: number,
+) {
+  return (details?: TDetails) => {
+    return new AppError<TDetails>(
+      code,          // 1️⃣
+      message,       // 2️⃣
+      status,        // 3️⃣
+      details,       // 4️⃣ (optionnel)
+    );
+  };
 }

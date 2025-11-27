@@ -15,19 +15,20 @@ export class AppErrorFilter implements ExceptionFilter {
     const response = ctx.getResponse();
 
     // ------------------------------------------------------------
-    // 1️⃣ AppError déjà prêt → réponse directe
+    // 1️⃣ AppError déjà formaté (ton erreur métier)
     // ------------------------------------------------------------
     if (exception instanceof AppError) {
       return response.status(exception.status).json({
         code: exception.code,
         message: exception.message,
+        globalError: exception.globalError,     // 🔥 AJOUT
         statusCode: exception.status,
         details: exception.details ?? null,
       });
     }
 
     // ------------------------------------------------------------
-    // 2️⃣ HttpException Nest (DTO, Forbidden, Unauthorized...)
+    // 2️⃣ HttpException (class-validator, Forbidden, etc.)
     // ------------------------------------------------------------
     if (exception instanceof HttpException) {
       const status = exception.getStatus();
@@ -41,6 +42,7 @@ export class AppErrorFilter implements ExceptionFilter {
         return response.status(400).json({
           code: 'VALIDATION_FAILED',
           message: 'Validation error',
+          globalError: 'Validation error',     // 🔥 AJOUT
           statusCode: 400,
           details: {
             fieldErrors: this.mapClassValidatorErrors(errResponse.message),
@@ -50,31 +52,38 @@ export class AppErrorFilter implements ExceptionFilter {
 
       // 2b) message = string[]
       if (Array.isArray(errResponse?.message)) {
+        const msg = errResponse.message[0] ?? 'Erreur HTTP';
+
         return response.status(status).json({
           code: 'NEST_ERROR',
-          message: errResponse.message?.[0] ?? 'Erreur HTTP',
+          message: msg,
+          globalError: msg,                   // 🔥 AJOUT
           statusCode: status,
           details: null,
         });
       }
 
       // 2c) message simple
+      const msg = errResponse?.message || 'Erreur HTTP';
+
       return response.status(status).json({
         code: 'NEST_ERROR',
-        message: errResponse?.message || 'Erreur HTTP',
+        message: msg,
+        globalError: msg,                     // 🔥 AJOUT
         statusCode: status,
         details: null,
       });
     }
 
     // ------------------------------------------------------------
-    // 3️⃣ Tout le reste → envoyer dans error.factory (Prisma, JS...)
+    // 3️⃣ Erreurs Prisma / JS générées → transformées via errorFactory
     // ------------------------------------------------------------
     const appError = errorFactory(exception);
 
     return response.status(appError.status).json({
       code: appError.code,
       message: appError.message,
+      globalError: appError.globalError,      // 🔥 AJOUT
       statusCode: appError.status,
       details: appError.details ?? null,
     });

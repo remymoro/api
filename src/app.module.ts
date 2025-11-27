@@ -3,6 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './database/prisma.module';
 import { CentersModule } from './modules/centers/centers.module';
+import { StoresModule } from './modules/stores/stores.module';
 
 @Module({
   controllers: [AppController],
@@ -12,6 +13,7 @@ import { CentersModule } from './modules/centers/centers.module';
   imports: [
     PrismaModule,
     CentersModule,
+    StoresModule,
   ],
 })
 export class AppModule {}

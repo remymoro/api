@@ -1,7 +1,9 @@
-
-
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
+}
+
+generator custom {
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
@@ -9,6 +11,23 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+//
+// =====================
+//       ENUMS
+// =====================
+//
+
+enum UserRole {
+  ADMIN
+  RESPONSABLE
+  BENEVOLE
+}
+
+//
+// =====================
+//       MODELS
+// =====================
+//
 
 model Center {
   id         Int      @id @default(autoincrement())
@@ -20,6 +39,7 @@ model Center {
   email      String?
 
   stores     Store[]
+  users      User[]  // 🔥 Tous les utilisateurs du centre (responsables + bénévoles)
 
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -41,6 +61,22 @@ model Store {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  // 🔥 Unicité réelle d’un magasin : adresse exacte
+  // 🔥 Unicité réelle d’un magasin : adresse complète
   @@unique([address, city, codePostal])
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+
+  username  String   @unique
+  email     String?  @unique
+  password  String
+
+  role      UserRole @default(BENEVOLE)
+
+  centerId  Int?
+  center    Center?  @relation(fields: [centerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

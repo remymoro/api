@@ -9,13 +9,19 @@
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
-    "baseUrl": "./",
-    "incremental": true,
-    "skipLibCheck": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@database/*": ["database/*"],
+      "@common/*": ["common/*"],
+      "@errors/*": ["common/errors/*"],
+      "@filters/*": ["common/filters/*"],
+      "@modules/*": ["modules/*"],
+      "@centers/*": ["modules/centers/*"],
+      "@stores/*": ["modules/stores/*"],
+      "@users/*": ["modules/users/*"],
+      "@prisma/*": ["database/*"]
+    },
+    "incremental": true
   }
 }

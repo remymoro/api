@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { PrismaService } from 'src/database/prisma.service';
+import { PrismaService } from '@database/prisma.service';
+import { Errors } from '@/common/errors';
 import { CreateCenterDto } from '../dto/create-center.dto';
 import { UpdateCenterDto } from '../dto/update-center.dto';
-import { Errors } from 'src/common/errors/errors';
 
 @Injectable()
 export class CentersService {

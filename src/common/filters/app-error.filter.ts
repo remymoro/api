@@ -4,9 +4,9 @@ import {
   ArgumentsHost,
   HttpException,
 } from '@nestjs/common';
-import { AppError } from '../errors/app-error';
-import { errorFactory } from '../errors/error.factory';
 import { ValidationError } from 'class-validator';
+import { AppError } from '../errors';
+import { errorFactory } from '../errors/error.factory';
 
 @Catch()
 export class AppErrorFilter implements ExceptionFilter {

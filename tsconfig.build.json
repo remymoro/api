@@ -1,4 +1,20 @@
 {
   "extends": "./tsconfig.json",
-  "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
+  "compilerOptions": {
+    "outDir": "./dist",
+    "baseUrl": "./src",
+    "paths": {
+      "@/*": ["*"],
+      "@common/*": ["common/*"],
+      "@errors/*": ["common/errors/*"],
+      "@filters/*": ["common/filters/*"],
+      "@database/*": ["database/*"],
+      "@modules/*": ["modules/*"],
+      "@centers/*": ["modules/centers/*"],
+      "@stores/*": ["modules/stores/*"],
+      "@users/*": ["modules/users/*"],
+      "@prisma/*": ["database/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist"]
 }

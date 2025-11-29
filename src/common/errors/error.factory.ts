@@ -1,16 +1,27 @@
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { Errors } from './errors';
 import { AppError } from './app-error';
+import { Errors } from './errors';
 
-
+/**
+ * ============================================================
+ * 🔥 errorFactory
+ * ------------------------------------------------------------
+ * Convertit TOUTES les erreurs en AppError :
+ *  - Prisma (P2002 / P2025 / P2003)
+ *  - Erreurs métier de ton code → AppError directement
+ *  - Erreurs Auth
+ *  - Erreurs User
+ *  - Fallback global unknown
+ * ============================================================
+ */
 export function errorFactory(error: any): AppError {
 
   // =============================================================
-  // 🔥 1. Prisma Known Request Error
+  // 1️⃣ Prisma Known Error
   // =============================================================
   if (error instanceof PrismaClientKnownRequestError) {
 
-    const model = error.meta?.modelName;   // ex: "Store" | "Center"
+    const model = error.meta?.modelName;   // ex: "Store" | "Center" | "User"
     const target = error.meta?.target as string[] | undefined;
 
     // -------------------------------------------------------------
@@ -35,38 +46,39 @@ export function errorFactory(error: any): AppError {
         }
       }
 
-      // ============================================================
-      // 🔵 CENTER — unique(name) ? (si tu le mets plus tard)
-      // ============================================================
+      // -------------------------------------------------------------
+      // 🔵 CENTER — unique(name)
+      // -------------------------------------------------------------
       if (model === 'Center' && target?.includes('name')) {
         return Errors.CenterAlreadyExists({
           fieldErrors: { name: 'Ce centre existe déjà.' },
         });
       }
 
-      // ============================================================
-      // 📧 Emails uniques (Center ou Store)
-      // ============================================================
+      // -------------------------------------------------------------
+      // 🔵 EMAIL — unique email pour User / Center / Store
+      // -------------------------------------------------------------
       if (target?.includes('email')) {
         if (model === 'Store') {
           return Errors.StoreInvalidEmail({
-            fieldErrors: {
-              email: "L'adresse email est déjà utilisée.",
-            },
+            fieldErrors: { email: "L'adresse email est déjà utilisée." },
           });
         }
         if (model === 'Center') {
           return Errors.CenterInvalidEmail({
-            fieldErrors: {
-              email: "L'adresse email est déjà utilisée.",
-            },
+            fieldErrors: { email: "L'adresse email est déjà utilisée." },
+          });
+        }
+        if (model === 'User') {
+          return Errors.UserAlreadyExists({
+            fieldErrors: { email: "L'adresse email est déjà utilisée." },
           });
         }
       }
 
-      // ============================================================
-      // 🟡 Fallback pour autres uniques
-      // ============================================================
+      // -------------------------------------------------------------
+      // 🟡 Autres uniques
+      // -------------------------------------------------------------
       return Errors.ValidationFailed({
         fieldErrors: {
           [target?.join(', ') ?? 'unknown']: 'Valeur déjà utilisée.',
@@ -81,6 +93,7 @@ export function errorFactory(error: any): AppError {
 
       if (model === 'Store') return Errors.StoreNotFound();
       if (model === 'Center') return Errors.CenterNotFound();
+      if (model === 'User') return Errors.UserNotFound();
 
       return Errors.UnknownError();
     }
@@ -90,7 +103,7 @@ export function errorFactory(error: any): AppError {
     // -------------------------------------------------------------
     if (error.code === 'P2003') {
 
-      // ➜ Exemple : suppression d’un center lié à des stores
+      // Exemple : suppression d’un center avec stores liés
       if (model === 'Store' && error.meta?.field_name === 'centerId') {
         return Errors.ValidationFailed({
           fieldErrors: {
@@ -104,12 +117,23 @@ export function errorFactory(error: any): AppError {
   }
 
   // =============================================================
-  // 🟡 2. Déjà un AppError → on renvoie tel quel
+  // 2️⃣ AppError déjà construit → retourner tel quel
   // =============================================================
   if (error instanceof AppError) return error;
 
   // =============================================================
-  // 🔴 3. Fallback erreur inconnue
+  // 3️⃣ Erreurs AUTH (token, credentials…) venant de libs externes
+  // =============================================================
+  if (error?.name === 'TokenExpiredError') {
+    return Errors.AuthTokenExpired();
+  }
+  if (error?.name === 'JsonWebTokenError') {
+    return Errors.AuthTokenInvalid();
+
+  }
+
+  // =============================================================
+  // 4️⃣ Fallback erreur inconnue
   // =============================================================
   return Errors.UnknownError();
 }

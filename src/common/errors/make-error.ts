@@ -1,5 +1,4 @@
 import { AppError } from './app-error';
-import { AppErrorCode } from './app-error-code';
 
 // makeError est une "factory", une usine qui sert à créer
 // des erreurs AppError facilement ET de manière uniformisée.

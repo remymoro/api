@@ -1,8 +1,7 @@
 import 'dotenv/config';
-
-import { NestFactory } from '@nestjs/core';
+import * as cookieParser from 'cookie-parser';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-
 import { ValidationPipe, BadRequestException } from '@nestjs/common';
 import { ValidationError } from 'class-validator';
 
@@ -16,9 +15,11 @@ async function bootstrap() {
     },
   });
 
+  // Log requests (headers are partially redacted)
+  app.use(cookieParser());   // 🔥 indispensable
+
   // 1️⃣ Installe le filtre global d’erreurs
   app.useGlobalFilters(new AppErrorFilter());
-
   // 2️⃣ Installe le ValidationPipe – SYNTAXE CORRECTE
   app.useGlobalPipes(
     new ValidationPipe({
